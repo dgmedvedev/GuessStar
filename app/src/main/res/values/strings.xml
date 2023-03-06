@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Guess Star</string>
+    <string name="photo_star">Фото звезды</string>
+    <string name="button_option_1">Option1</string>
+    <string name="button_option_2">Option2</string>
+    <string name="button_option_3">Option3</string>
+    <string name="button_option_4">Option4</string>
+</resources>
