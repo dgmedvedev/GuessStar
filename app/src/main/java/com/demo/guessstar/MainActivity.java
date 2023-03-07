@@ -6,7 +6,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -25,39 +24,48 @@ import java.util.regex.Pattern;
 public class MainActivity extends AppCompatActivity {
 
     private Button buttonOptionOne;
+    private Button buttonOptionTwo;
+    private Button buttonOptionThree;
+    private Button buttonOptionFour;
+
     private ImageView imageViewPhotoStar;
-    private int count = 0;
+    private int count = 1;
 
     ArrayList<String> urlPhotos;
-    ArrayList<String> names;
     ArrayList<Bitmap> photos;
+    ArrayList<String> names;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         buttonOptionOne = findViewById(R.id.buttonOptionOne);
+        buttonOptionTwo = findViewById(R.id.buttonOptionTwo);
+        buttonOptionThree = findViewById(R.id.buttonOptionThree);
+        buttonOptionFour = findViewById(R.id.buttonOptionFour);
         imageViewPhotoStar = findViewById(R.id.imageViewPhotoStar);
 
         urlPhotos = new ArrayList<>();
         names = new ArrayList<>();
         photos = new ArrayList<>();
-        String url = "https://bodysize.org/ru/top100/";
-        DownloadWebContent dc = new DownloadWebContent();
+
+        String url = getString(R.string.url);
+
+        DownloadWebContent dwc = new DownloadWebContent();
         try {
-            String data = dc.execute(url).get();
-            Pattern patternPhotos = Pattern.compile("style=\"background-image: url(.*?);");
-            Pattern patternNames = Pattern.compile("target=\"_blank\">(.*?)</a>");
+            String data = dwc.execute(url).get();
             if (data != null) {
+                Pattern patternPhotos = Pattern.compile("style=\"background-image: url(.*?);");
+                Pattern patternNames = Pattern.compile("target=\"_blank\">(.*?)</a></");
                 Matcher matcherPhotos = patternPhotos.matcher(data);
                 Matcher matcherNames = patternNames.matcher(data);
                 while (matcherPhotos.find()) {
-                    String subResult = null;
+                    String subResult;
                     String result = matcherPhotos.group(1);
                     if (result != null) {
                         subResult = result.substring(1, result.length() - 1);
+                        urlPhotos.add(subResult);
                     }
-                    urlPhotos.add(subResult);
                 }
                 while (matcherNames.find()) {
                     names.add(matcherNames.group(1));
@@ -66,46 +74,38 @@ public class MainActivity extends AppCompatActivity {
         } catch (ExecutionException | InterruptedException e) {
             e.printStackTrace();
         }
-        for (String urls : urlPhotos) {
-            System.out.println(urls);
-        }
-        for (String name : names) {
-            System.out.println(name);
-        }
 
-//        for (String str : urlPhotos) {
-//            try {
-//                Bitmap bitmap = dit.execute(str).get();
-//                photos.add(bitmap);
-//            } catch (ExecutionException | InterruptedException e) {
-//                throw new RuntimeException(e);
-//            }
-//        }
-        buttonOptionOne.setOnClickListener(view -> {
-            DownloadImageTask dit = new DownloadImageTask();
-            Bitmap bitmap;
+        for (String urlPhoto : urlPhotos) {
             try {
-                String urlPhoto = urlPhotos.get(0);
-                Log.i("URLPhoto", urlPhoto);
-                bitmap = dit.execute(urlPhoto).get();
-                //bitmap = dit.execute(urlPhotos.get(0)).get();
+                DownloadImageTask dit = new DownloadImageTask();
+                Bitmap bitmap = dit.execute(urlPhoto).get();
+                photos.add(bitmap);
             } catch (ExecutionException | InterruptedException e) {
                 throw new RuntimeException(e);
             }
-            if (bitmap != null) {
-                photos.add(bitmap);
-                imageViewPhotoStar.setImageBitmap(bitmap);
-                Toast.makeText(getApplicationContext(), bitmap.toString(), Toast.LENGTH_SHORT).show();
-                //imageViewPhotoStar.setImageBitmap(photos.get(count));
-                //count++;
-            } else {
-                Toast.makeText(getApplicationContext(), "bitmap = " + bitmap, Toast.LENGTH_SHORT).show();
+        }
+
+        downloadActivity();
+
+        buttonOptionOne.setOnClickListener(view -> {
+            if (count >= photos.size()) {
+                count = 0;
             }
+            imageViewPhotoStar.setImageBitmap(photos.get(count));
+            count++;
         });
     }
 
-    private void choiceStar() {
-
+    private void downloadActivity() {
+        if (urlPhotos != null && photos != null && names != null) {
+            imageViewPhotoStar.setImageBitmap(photos.get(0));
+            buttonOptionOne.setText(names.get(3));
+            buttonOptionTwo.setText(names.get(1));
+            buttonOptionThree.setText(names.get(0));
+            buttonOptionFour.setText(names.get(2));
+        } else {
+            Toast.makeText(getApplicationContext(), "Error data", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private static class DownloadWebContent extends AsyncTask<String, Void, String> {
