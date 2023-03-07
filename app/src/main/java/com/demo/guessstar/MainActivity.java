@@ -6,8 +6,10 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -44,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
         DownloadWebContent dc = new DownloadWebContent();
         try {
             String data = dc.execute(url).get();
-            Pattern patternPhotos = Pattern.compile(": url(.*?);");
+            Pattern patternPhotos = Pattern.compile("style=\"background-image: url(.*?);");
             Pattern patternNames = Pattern.compile("target=\"_blank\">(.*?)</a>");
             if (data != null) {
                 Matcher matcherPhotos = patternPhotos.matcher(data);
@@ -53,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
                     String subResult = null;
                     String result = matcherPhotos.group(1);
                     if (result != null) {
-                        subResult = result.substring(0, result.length() - 1);
+                        subResult = result.substring(1, result.length() - 1);
                     }
                     urlPhotos.add(subResult);
                 }
@@ -70,14 +72,7 @@ public class MainActivity extends AppCompatActivity {
         for (String name : names) {
             System.out.println(name);
         }
-        DownloadImageTask dit = new DownloadImageTask();
-        Bitmap bitmap;
-        try {
-            bitmap = dit.execute(urlPhotos.get(0)).get();
-        } catch (ExecutionException | InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        photos.add(bitmap);
+
 //        for (String str : urlPhotos) {
 //            try {
 //                Bitmap bitmap = dit.execute(str).get();
@@ -87,8 +82,25 @@ public class MainActivity extends AppCompatActivity {
 //            }
 //        }
         buttonOptionOne.setOnClickListener(view -> {
-            imageViewPhotoStar.setImageBitmap(photos.get(count));
-            //count++;
+            DownloadImageTask dit = new DownloadImageTask();
+            Bitmap bitmap;
+            try {
+                String urlPhoto = urlPhotos.get(0);
+                Log.i("URLPhoto", urlPhoto);
+                bitmap = dit.execute(urlPhoto).get();
+                //bitmap = dit.execute(urlPhotos.get(0)).get();
+            } catch (ExecutionException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            if (bitmap != null) {
+                photos.add(bitmap);
+                imageViewPhotoStar.setImageBitmap(bitmap);
+                Toast.makeText(getApplicationContext(), bitmap.toString(), Toast.LENGTH_SHORT).show();
+                //imageViewPhotoStar.setImageBitmap(photos.get(count));
+                //count++;
+            } else {
+                Toast.makeText(getApplicationContext(), "bitmap = " + bitmap, Toast.LENGTH_SHORT).show();
+            }
         });
     }
 
