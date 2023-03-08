@@ -23,97 +23,165 @@ import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
 
-    private Button buttonOptionOne;
-    private Button buttonOptionTwo;
-    private Button buttonOptionThree;
-    private Button buttonOptionFour;
+    private Button button0;
+    private Button button1;
+    private Button button2;
+    private Button button3;
+    private ImageView imageViewStar;
 
-    private ImageView imageViewPhotoStar;
-    private int count = 1;
+    String url;
 
-    ArrayList<String> urlPhotos;
-    ArrayList<Bitmap> photos;
+    ArrayList<String> urlImages;
+    ArrayList<Bitmap> images;
     ArrayList<String> names;
+    ArrayList<Button> buttons;
+
+    private int numberOfQuestion;
+    private int numberOfRightAnswer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        buttonOptionOne = findViewById(R.id.buttonOptionOne);
-        buttonOptionTwo = findViewById(R.id.buttonOptionTwo);
-        buttonOptionThree = findViewById(R.id.buttonOptionThree);
-        buttonOptionFour = findViewById(R.id.buttonOptionFour);
-        imageViewPhotoStar = findViewById(R.id.imageViewPhotoStar);
+        button0 = findViewById(R.id.button0);
+        button1 = findViewById(R.id.button1);
+        button2 = findViewById(R.id.button2);
+        button3 = findViewById(R.id.button3);
+        buttons = new ArrayList<>();
+        buttons.add(button0);
+        buttons.add(button1);
+        buttons.add(button2);
+        buttons.add(button3);
 
-        urlPhotos = new ArrayList<>();
+        imageViewStar = findViewById(R.id.imageViewStar);
+        url = getString(R.string.url);
+
+        urlImages = new ArrayList<>();
         names = new ArrayList<>();
-        photos = new ArrayList<>();
+        images = new ArrayList<>();
 
-        String url = getString(R.string.url);
+        getContent();
 
-        DownloadWebContent dwc = new DownloadWebContent();
+        playGame();
+
+        button0.setOnClickListener(view -> {
+            Button button = (Button) view;
+            String tag = button.getTag().toString();
+            if (Integer.parseInt(tag) == numberOfRightAnswer) {
+                Toast.makeText(this, "Верно", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Неверно, правильный ответ: " +
+                        names.get(numberOfQuestion), Toast.LENGTH_SHORT).show();
+            }
+            playGame();
+        });
+        button1.setOnClickListener(view -> {
+            Button button = (Button) view;
+            String tag = button.getTag().toString();
+            if (Integer.parseInt(tag) == numberOfRightAnswer) {
+                Toast.makeText(this, "Верно", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Неверно, правильный ответ: " +
+                        names.get(numberOfQuestion), Toast.LENGTH_SHORT).show();
+            }
+            playGame();
+        });
+        button2.setOnClickListener(view -> {
+            Button button = (Button) view;
+            String tag = button.getTag().toString();
+            if (Integer.parseInt(tag) == numberOfRightAnswer) {
+                Toast.makeText(this, "Верно", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Неверно, правильный ответ: " +
+                        names.get(numberOfQuestion), Toast.LENGTH_SHORT).show();
+            }
+            playGame();
+        });
+        button3.setOnClickListener(view -> {
+            Button button = (Button) view;
+            String tag = button.getTag().toString();
+            if (Integer.parseInt(tag) == numberOfRightAnswer) {
+                Toast.makeText(this, "Верно", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Неверно, правильный ответ: " +
+                        names.get(numberOfQuestion), Toast.LENGTH_SHORT).show();
+            }
+            playGame();
+        });
+    }
+
+    private void playGame() {
+        generateQuestion();
+        imageViewStar.setImageBitmap(images.get(numberOfQuestion));
+        for (int i = 0; i < buttons.size(); i++) {
+            if (numberOfRightAnswer == i) {
+                buttons.get(i).setText(names.get(numberOfQuestion));
+            } else {
+                int wrongAnswer = generateWrongAnswer();
+                buttons.get(i).setText(names.get(wrongAnswer));
+            }
+        }
+    }
+
+    private void generateQuestion() {
+        numberOfQuestion = (int) (Math.random() * names.size());
+        numberOfRightAnswer = (int) (Math.random() * buttons.size());
+    }
+
+    private int generateWrongAnswer() {
+        return (int) (Math.random() * names.size());
+    }
+
+    private void getContent() {
+        DownloadContentTask task = new DownloadContentTask();
         try {
-            String data = dwc.execute(url).get();
-            if (data != null) {
-                Pattern patternPhotos = Pattern.compile("style=\"background-image: url(.*?);");
-                Pattern patternNames = Pattern.compile("target=\"_blank\">(.*?)</a></");
-                Matcher matcherPhotos = patternPhotos.matcher(data);
-                Matcher matcherNames = patternNames.matcher(data);
-                while (matcherPhotos.find()) {
-                    String subResult;
-                    String result = matcherPhotos.group(1);
-                    if (result != null) {
-                        subResult = result.substring(1, result.length() - 1);
-                        urlPhotos.add(subResult);
-                    }
+            String content = task.execute(url).get();
+
+            if (content != null) {
+                String start = "<div class=\"top-position\">#1</div>";
+                String finish = "function top100_get_next_page\\( btn, page, lang \\) \\{";
+                Pattern pattern = Pattern.compile(start + "(.*?)" + finish);
+                Matcher matcher = pattern.matcher(content);
+                String splitContent = "";
+                while (matcher.find()) {
+                    splitContent = matcher.group(1);
                 }
-                while (matcherNames.find()) {
-                    names.add(matcherNames.group(1));
+                if (splitContent != null) {
+                    Pattern patternImages = Pattern.compile("style=\"background-image: url\\((.*?)\\);");
+                    Pattern patternNames = Pattern.compile("target=\"_blank\">(.*?)</a></");
+                    Matcher matcherImages = patternImages.matcher(splitContent);
+                    Matcher matcherNames = patternNames.matcher(splitContent);
+                    while (matcherImages.find()) {
+                        urlImages.add(matcherImages.group(1));
+                    }
+                    while (matcherNames.find()) {
+                        names.add(matcherNames.group(1));
+                    }
                 }
             }
         } catch (ExecutionException | InterruptedException e) {
             e.printStackTrace();
         }
 
-        for (String urlPhoto : urlPhotos) {
+        for (String urlPhoto : urlImages) {
             try {
                 DownloadImageTask dit = new DownloadImageTask();
                 Bitmap bitmap = dit.execute(urlPhoto).get();
-                photos.add(bitmap);
+                if (bitmap != null) {
+                    images.add(bitmap);
+                }
             } catch (ExecutionException | InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }
-
-        downloadActivity();
-
-        buttonOptionOne.setOnClickListener(view -> {
-            if (count >= photos.size()) {
-                count = 0;
-            }
-            imageViewPhotoStar.setImageBitmap(photos.get(count));
-            count++;
-        });
     }
 
-    private void downloadActivity() {
-        if (urlPhotos != null && photos != null && names != null) {
-            imageViewPhotoStar.setImageBitmap(photos.get(0));
-            buttonOptionOne.setText(names.get(3));
-            buttonOptionTwo.setText(names.get(1));
-            buttonOptionThree.setText(names.get(0));
-            buttonOptionFour.setText(names.get(2));
-        } else {
-            Toast.makeText(getApplicationContext(), "Error data", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private static class DownloadWebContent extends AsyncTask<String, Void, String> {
+    private static class DownloadContentTask extends AsyncTask<String, Void, String> {
         @Override
         protected String doInBackground(String... strings) {
-            StringBuilder result = new StringBuilder();
             URL url;
             HttpURLConnection urlConnection = null;
+            StringBuilder result = new StringBuilder();
 
             try {
                 url = new URL(strings[0]);
@@ -126,14 +194,15 @@ public class MainActivity extends AppCompatActivity {
                     result.append(line);
                     line = bufferedReader.readLine();
                 }
+                return result.toString();
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                e.printStackTrace();
             } finally {
                 if (urlConnection != null) {
                     urlConnection.disconnect();
                 }
             }
-            return result.toString();
+            return null;
         }
     }
 

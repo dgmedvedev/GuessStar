@@ -1,9 +1,9 @@
 <resources>
     <string name="app_name">Guess Star</string>
-    <string name="photo_star">Фото звезды</string>
-    <string name="button_option_1">Option1</string>
-    <string name="button_option_2">Option2</string>
-    <string name="button_option_3">Option3</string>
-    <string name="button_option_4">Option4</string>
+    <string name="photo_star">Фото знаменитости</string>
+    <string name="button_option_0">Option 0</string>
+    <string name="button_option_1">Option 1</string>
+    <string name="button_option_2">Option 2</string>
+    <string name="button_option_3">Option 3</string>
     <string name="url">https://bodysize.org/ru/top100/</string>
 </resources>
